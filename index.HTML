@@ -3,304 +3,276 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prayer Management System - NITW EU</title>
+<title>NITW EU Prayer System</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{
-  font-family:'Segoe UI',sans-serif;
-  margin:0;
-  background:#f4f6f9;
+font-family:'Segoe UI',sans-serif;
+margin:0;
+background:#f4f6f9;
 }
 
 header{
-  background:#1e3a8a;
-  color:white;
-  padding:15px 30px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+background:#1e3a8a;
+color:white;
+padding:15px;
+text-align:center;
+font-size:20px;
+font-weight:bold;
 }
 
-header img{ height:60px; }
-
 .container{
-  max-width:1000px;
-  margin:auto;
-  padding:20px;
+max-width:900px;
+margin:auto;
+padding:20px;
 }
 
 .card{
-  background:white;
-  padding:20px;
-  margin-bottom:20px;
-  border-radius:10px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
+margin-bottom:20px;
 }
 
 input,select,textarea{
-  width:100%;
-  padding:10px;
-  margin:8px 0 15px;
-  border-radius:6px;
-  border:1px solid #ccc;
+width:100%;
+padding:10px;
+margin:8px 0 15px;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
-textarea{ min-height:70px; }
+textarea{min-height:70px;}
 
 button{
-  background:#1e3a8a;
-  color:white;
-  padding:8px 15px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  margin-top:5px;
+background:#1e3a8a;
+color:white;
+padding:8px 15px;
+border:none;
+border-radius:6px;
+cursor:pointer;
 }
 
-button:hover{ background:#162d6b; }
+button:hover{background:#162d6b;}
 
 .submit-btn{
-  background:#16a34a;
-  padding:14px 30px;
-  font-size:18px;
-  font-weight:bold;
+background:#16a34a;
+font-size:18px;
+font-weight:bold;
+padding:14px 25px;
 }
 
-.submit-btn:hover{ background:#15803d; }
-
-.hidden{ display:none; }
-
-.role-switch{ text-align:center; margin-bottom:20px; }
+.logout{
+background:#dc2626;
+float:right;
+}
 
 .success-box{
-  background:#ecfdf5;
-  color:#065f46;
-  padding:15px;
-  border-radius:8px;
-  margin-top:15px;
-  font-weight:500;
+background:#ecfdf5;
+color:#065f46;
+padding:15px;
+border-radius:8px;
+margin-top:15px;
 }
+.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div style="font-size:20px;font-weight:bold;">
-    ✨ Prayer Management System - NITW EU ✨
-  </div>
-  <img src="logo.png">
+✨ NIT Warangal EU Prayer Management ✨
 </header>
 
 <div class="container">
 
-<div class="role-switch">
-  <button onclick="showUser()">User</button>
-  <button onclick="showSecretary()">Secretary</button>
+<!-- LOGIN SECTION -->
+<div id="loginSection" class="card">
+<h2>🔐 Login</h2>
+
+<select id="role">
+<option value="user">User</option>
+<option value="secretary">Secretary</option>
+</select>
+
+<input type="text" id="loginName" placeholder="Enter Name">
+
+<input type="password" id="loginPass" placeholder="Password (Secretary only)">
+
+<button onclick="login()">Login</button>
 </div>
 
 <!-- USER SECTION -->
-<div id="userSection" class="card">
+<div id="userSection" class="hidden">
 
-<h2>🙌 Submit Your Praising & Prayer</h2>
+<button class="logout" onclick="logout()">Logout</button>
 
-<label>Name</label>
-<input type="text" id="name">
+<div class="card">
+<h2>🙌 Submit Praising & Prayer</h2>
 
-<label>Month</label>
 <select id="userMonth"></select>
-
-<label>Year</label>
 <select id="userYear"></select>
 
 <h3>🙌 Praising Points</h3>
 <div id="praisingContainer"></div>
-<button onclick="addPraising()">+ Add More Praising</button>
+<button onclick="addPraising()">+ Add Praising</button>
 
 <h3>🙏 Prayer Points</h3>
 <div id="prayerContainer"></div>
-<button onclick="addPrayer()">+ Add More Prayer</button>
+<button onclick="addPrayer()">+ Add Prayer</button>
 
 <br><br>
 <button class="submit-btn" onclick="submitPrayer()">Submit 🙏</button>
 
 <div id="successMsg"></div>
+</div>
 
 </div>
 
-<!-- SECRETARY LOGIN -->
-<div id="secretaryLogin" class="card hidden">
-<h2>🔐 Secretary Login</h2>
-<input type="password" id="secPass" placeholder="Enter Password">
-<button onclick="loginSecretary()">Login</button>
-</div>
+<!-- SECRETARY SECTION -->
+<div id="secretarySection" class="hidden">
 
-<!-- SECRETARY DASHBOARD -->
-<div id="secretaryDashboard" class="hidden">
+<button class="logout" onclick="logout()">Logout</button>
+
 <div class="card">
+<h2>📄 Generate Prayer Letter</h2>
 
-<h3>Secretary Name</h3>
-<input type="text" id="secName" placeholder="Enter Your Name">
-
-<h3>Do you have any Special Praising Points? 🙌</h3>
-<select id="secPraiseOption" onchange="toggleSecPraising()">
-<option value="no">No</option>
-<option value="yes">Yes</option>
-</select>
-
-<div id="secPraisingSection" class="hidden">
-<div id="secPraisingContainer"></div>
-<button onclick="addSecPraising()">+ Add Special Praising</button>
-</div>
-
-<h3>Do you have any Special Prayer Points? 🙏</h3>
-<select id="secPrayerOption" onchange="toggleSecPrayer()">
-<option value="no">No</option>
-<option value="yes">Yes</option>
-</select>
-
-<div id="secPrayerSection" class="hidden">
-<div id="secPrayerContainer"></div>
-<button onclick="addSecPrayer()">+ Add Special Prayer</button>
-</div>
-
-<hr>
-
-<h2>📄 Generate Monthly Prayer Letter</h2>
 <select id="filterMonth"></select>
 <select id="filterYear"></select>
 
-<button onclick="downloadPDF()">Download Official Prayer Letter 📥</button>
-
+<button onclick="downloadPDF()">Download Official Letter</button>
 </div>
+
 </div>
 
 </div>
 
 <script>
 
-/* STORAGE */
+/* SECRETARY PASSWORD */
+const SECRETARY_PASSWORD = "nitw123";
+
+/* STORAGE INIT */
 if(!localStorage.getItem("prayers")){
-localStorage.setItem("prayers", JSON.stringify([]));
+localStorage.setItem("prayers",JSON.stringify([]));
 }
 
 const months=["January","February","March","April","May","June",
 "July","August","September","October","November","December"];
 
 document.addEventListener("DOMContentLoaded",function(){
-initializeFields();
 populateMonthYear();
 });
 
-/* Populate Month & Year */
+/* LOGIN FUNCTION */
+function login(){
+
+const role=document.getElementById("role").value;
+const name=document.getElementById("loginName").value.trim();
+const pass=document.getElementById("loginPass").value;
+
+if(!name){
+alert("Enter name first 🙏");
+return;
+}
+
+if(role==="secretary" && pass!==SECRETARY_PASSWORD){
+alert("Wrong Secretary Password ❌");
+return;
+}
+
+localStorage.setItem("currentUser",name);
+localStorage.setItem("currentRole",role);
+
+showSection(role);
+}
+
+/* SHOW SECTION */
+function showSection(role){
+document.getElementById("loginSection").classList.add("hidden");
+
+if(role==="user"){
+document.getElementById("userSection").classList.remove("hidden");
+initializeFields();
+}else{
+document.getElementById("secretarySection").classList.remove("hidden");
+}
+}
+
+/* LOGOUT */
+function logout(){
+localStorage.removeItem("currentUser");
+localStorage.removeItem("currentRole");
+location.reload();
+}
+
+/* MONTH/YEAR */
 function populateMonthYear(){
 months.forEach(m=>{
 userMonth.innerHTML+=`<option>${m}</option>`;
 filterMonth.innerHTML+=`<option>${m}</option>`;
 });
-const year=new Date().getFullYear();
-for(let y=year-5;y<=year+5;y++){
+const currentYear=new Date().getFullYear();
+for(let y=currentYear-5;y<=currentYear+5;y++){
 userYear.innerHTML+=`<option>${y}</option>`;
 filterYear.innerHTML+=`<option>${y}</option>`;
 }
 }
 
-/* Initialize Default Fields */
+/* USER FUNCTIONS */
 function initializeFields(){
 praisingContainer.innerHTML="";
 prayerContainer.innerHTML="";
-addPraising(); addPraising();
-addPrayer(); addPrayer();
+addPraising();addPraising();
+addPrayer();addPrayer();
 }
 
-/* Role Switch */
-function showUser(){
-userSection.classList.remove("hidden");
-secretaryLogin.classList.add("hidden");
-secretaryDashboard.classList.add("hidden");
+function addPraising(){
+const t=document.createElement("textarea");
+praisingContainer.appendChild(t);
 }
 
-function showSecretary(){
-userSection.classList.add("hidden");
-secretaryLogin.classList.remove("hidden");
+function addPrayer(){
+const t=document.createElement("textarea");
+prayerContainer.appendChild(t);
 }
 
-function loginSecretary(){
-if(secPass.value==="admin123"){
-secretaryLogin.classList.add("hidden");
-secretaryDashboard.classList.remove("hidden");
-}else alert("Incorrect password ❌");
-}
-
-/* Add Fields */
-function addPraising(){ praisingContainer.appendChild(document.createElement("textarea")); }
-function addPrayer(){ prayerContainer.appendChild(document.createElement("textarea")); }
-function addSecPraising(){ secPraisingContainer.appendChild(document.createElement("textarea")); }
-function addSecPrayer(){ secPrayerContainer.appendChild(document.createElement("textarea")); }
-
-/* Toggle Secretary Sections */
-function toggleSecPraising(){
-if(secPraiseOption.value==="yes"){
-secPraisingSection.classList.remove("hidden");
-if(secPraisingContainer.children.length===0){
-addSecPraising(); addSecPraising();
-}
-}else{
-secPraisingSection.classList.add("hidden");
-secPraisingContainer.innerHTML="";
-}
-}
-
-function toggleSecPrayer(){
-if(secPrayerOption.value==="yes"){
-secPrayerSection.classList.remove("hidden");
-if(secPrayerContainer.children.length===0){
-addSecPrayer(); addSecPrayer();
-}
-}else{
-secPrayerSection.classList.add("hidden");
-secPrayerContainer.innerHTML="";
-}
-}
-
-/* Submit Prayer */
 function submitPrayer(){
 
-const n=name.value.trim();
+const name=localStorage.getItem("currentUser");
 const m=userMonth.value;
 const y=userYear.value;
 
-const praising=[...praisingContainer.querySelectorAll("textarea")]
+const praising=[...document.querySelectorAll("#praisingContainer textarea")]
 .map(t=>t.value.trim()).filter(v=>v!="");
 
-const prayer=[...prayerContainer.querySelectorAll("textarea")]
+const prayer=[...document.querySelectorAll("#prayerContainer textarea")]
 .map(t=>t.value.trim()).filter(v=>v!="");
 
-if(!n||prayer.length===0){
-alert("Please fill required fields 🙏");
+if(prayer.length===0){
+alert("Please add at least one prayer 🙏");
 return;
 }
 
 const prayers=JSON.parse(localStorage.getItem("prayers"));
-prayers.push({name:n,month:m,year:y,praising,prayer});
+prayers.push({name,month:m,year:y,praising,prayer});
 localStorage.setItem("prayers",JSON.stringify(prayers));
 
 successMsg.innerHTML=`
 <div class="success-box">
-✨ Thank you for submitting! 🙌<br><br>
-Your faith move has been received 💚<br>
-Heaven's inbox just got updated 📩✨<br><br>
-Keep trusting. Keep praying. God’s got this 🙏🔥
+✨ Thank you for submitting! 🙌<br>
+Heaven’s inbox updated 📩✨<br>
+Keep trusting — God’s got this 🙏🔥
 </div>
 `;
 
-name.value="";
 initializeFields();
 }
 
-/* PDF GENERATION */
+/* PDF */
 function downloadPDF(){
 
 const { jsPDF } = window.jspdf;
@@ -312,101 +284,30 @@ const selectedYear=filterYear.value;
 const data=JSON.parse(localStorage.getItem("prayers"))
 .filter(p=>p.month===selectedMonth && p.year===selectedYear);
 
-const secN=secName.value||"Prayer Secretary";
-
-let secPraise=[];
-let secPrayer=[];
-
-if(secPraiseOption.value==="yes"){
-secPraise=[...secPraisingContainer.querySelectorAll("textarea")]
-.map(t=>t.value.trim()).filter(v=>v!="");
-}
-
-if(secPrayerOption.value==="yes"){
-secPrayer=[...secPrayerContainer.querySelectorAll("textarea")]
-.map(t=>t.value.trim()).filter(v=>v!="");
-}
-
 let y=20;
 
-doc.setFontSize(16);
-doc.setFont(undefined,"bold");
-doc.text("UESI – TS | NIT WARANGAL EU",105,y,{align:"center"});
-y+=10;
-
 doc.setFontSize(14);
-doc.text("Monthly Prayer Letter - "+selectedMonth+" "+selectedYear,105,y,{align:"center"});
-y+=15;
-
-doc.setFontSize(12);
-doc.setFont(undefined,"normal");
-doc.text("Dear Brother/Sister in Christ,",20,y);
+doc.text("NIT Warangal EU Prayer Letter",20,y);
 y+=10;
 
-/* Secretary Praising */
-if(secPraise.length>0){
-doc.setFont(undefined,"bold");
-doc.text("🙌 Praise God for:",20,y);
-doc.setFont(undefined,"normal");
-y+=8;
-
-secPraise.forEach((p,i)=>{
-if(y>280){doc.addPage();y=20;}
-doc.text((i+1)+". "+p,25,y);
-y+=7;
-});
-y+=5;
-}
-
-/* Secretary Prayer */
-if(secPrayer.length>0){
-doc.setFont(undefined,"bold");
-doc.text("🙏 Special Prayer Points:",20,y);
-doc.setFont(undefined,"normal");
-y+=8;
-
-secPrayer.forEach((p,i)=>{
-if(y>280){doc.addPage();y=20;}
-doc.text((i+1)+". "+p,25,y);
-y+=7;
-});
-y+=5;
-}
-
-/* Personal Prayer */
-if(data.length>0){
-doc.setFont(undefined,"bold");
-doc.text("🙏 Personal Prayer Requests:",20,y);
-doc.setFont(undefined,"normal");
-y+=8;
+doc.setFontSize(11);
 
 data.forEach(person=>{
-if(y>280){doc.addPage();y=20;}
-
-doc.setFont(undefined,"bold");
 doc.text("Name: "+person.name,20,y);
-doc.setFont(undefined,"normal");
+y+=7;
+
+doc.text("Prayer Points:",20,y);
 y+=7;
 
 person.prayer.forEach((pt,i)=>{
-if(y>280){doc.addPage();y=20;}
 doc.text((i+1)+". "+pt,25,y);
 y+=6;
 });
-y+=5;
+
+y+=8;
 });
-}
 
-y+=10;
-doc.text("Thank you for partnering in prayer 🙏",20,y);
-y+=8;
-doc.text("Yours in His grace,",20,y);
-y+=8;
-doc.text(secN,20,y);
-y+=8;
-doc.text("NIT Warangal EU - Prayer Secretary",20,y);
-
-doc.save("Prayer_Letter_"+selectedMonth+"_"+selectedYear+".pdf");
+doc.save("Prayer_Letter.pdf");
 }
 
 </script>
