@@ -1,1 +1,330 @@
-<!DOCTYPE html> <html> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Prayer Management System</title> <style> body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f6f9; } header { background: #1e3a8a; color: white; padding: 15px; text-align: center; font-size: 20px; } .container { max-width: 900px; margin: auto; padding: 20px; } .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); } h2 { margin-top: 0; } input, select, textarea { width: 100%; padding: 10px; margin: 8px 0 15px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; } textarea { resize: vertical; min-height: 80px; } button { background: #1e3a8a; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; } button:hover { background: #162d6b; } table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; } th, td { border: 1px solid #ddd; padding: 8px; } th { background: #1e3a8a; color: white; } .special-box { background: #eef2ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; } .hidden { display: none; } .role-switch { text-align: center; margin-bottom: 20px; } .role-switch button { margin: 5px; } </style> </head> <body> <header>Prayer Management System</header> <div class="container"> <div class="role-switch"> <button onclick="showUser()">User</button> <button onclick="showSecretary()">Secretary</button> </div> <!-- ================= USER SECTION ================= --> <div id="userSection" class="card"> <h2>Submit Prayer Request</h2> <label>Name</label> <input type="text" id="name"> <label>Month</label> <input type="month" id="month"> <label>Praising Points</label> <textarea id="praising"></textarea> <label>Prayer Points</label> <textarea id="prayer"></textarea> <button onclick="submitPrayer()">Submit</button> <p id="successMsg" style="color:green;"></p> </div> <!-- ================= SECRETARY LOGIN ================= --> <div id="secretaryLogin" class="card hidden"> <h2>Secretary Login</h2> <input type="password" id="secPass" placeholder="Enter Password"> <button onclick="loginSecretary()">Login</button> </div> <!-- ================= SECRETARY DASHBOARD ================= --> <div id="secretaryDashboard" class="hidden"> <div class="card"> <h2>Special Prayer Points</h2> <select id="hasSpecial" onchange="toggleSpecial()"> <option value="no">No Special Points</option> <option value="yes">Add Special Points</option> </select> <div id="specialContainer" class="hidden"> <div id="specialPoints"></div> <button onclick="addSpecial()">Add Point</button> <button onclick="saveSpecial()">Save Special Points</button> </div> </div> <div class="card"> <h2>Monthly Data</h2> <select id="filterMonth" onchange="displayData()"></select> <button onclick="downloadCSV()">Download CSV</button> <div id="displayArea"></div> </div> </div> </div> <script> // ================= STORAGE INITIALIZE ================= if(!localStorage.getItem("prayers")){ localStorage.setItem("prayers", JSON.stringify([])); } // ================= ROLE SWITCH ================= function showUser(){ document.getElementById("userSection").classList.remove("hidden"); document.getElementById("secretaryLogin").classList.add("hidden"); document.getElementById("secretaryDashboard").classList.add("hidden"); } function showSecretary(){ document.getElementById("userSection").classList.add("hidden"); document.getElementById("secretaryLogin").classList.remove("hidden"); } // ================= USER SUBMIT ================= function submitPrayer(){ const name = document.getElementById("name").value; const month = document.getElementById("month").value; const praising = document.getElementById("praising").value; const prayer = document.getElementById("prayer").value; if(!name || !month || !prayer){ alert("Please fill required fields."); return; } const prayers = JSON.parse(localStorage.getItem("prayers")); prayers.push({name, month, praising, prayer}); localStorage.setItem("prayers", JSON.stringify(prayers)); document.getElementById("successMsg").innerText = "Submitted Successfully!"; document.getElementById("name").value=""; document.getElementById("praising").value=""; document.getElementById("prayer").value=""; } // ================= SECRETARY LOGIN ================= function loginSecretary(){ if(document.getElementById("secPass").value === "admin123"){ document.getElementById("secretaryLogin").classList.add("hidden"); document.getElementById("secretaryDashboard").classList.remove("hidden"); populateMonths(); displayData(); } else { alert("Incorrect password"); } } // ================= MONTH FILTER ================= function populateMonths(){ const prayers = JSON.parse(localStorage.getItem("prayers")); const months = [...new Set(prayers.map(p => p.month))]; const filter = document.getElementById("filterMonth"); filter.innerHTML = "<option value='all'>All Months</option>"; months.forEach(m=>{ filter.innerHTML += <option value="${m}">${m}</option>; }); } // ================= DISPLAY DATA ================= function displayData(){ const prayers = JSON.parse(localStorage.getItem("prayers")); const special = JSON.parse(localStorage.getItem("special")) || []; const selectedMonth = document.getElementById("filterMonth").value; let filtered = selectedMonth==="all" ? prayers : prayers.filter(p=>p.month===selectedMonth); let html = ""; if(special.length>0){ html += "<div class='special-box'><h3>Special Prayer Points</h3><ul>"; special.forEach(p=> html += <li>${p}</li>); html += "</ul></div>"; } html += "<h3>Personal Prayer Points</h3>"; html += "<table><tr><th>Name</th><th>Praising</th><th>Prayer Points</th></tr>"; filtered.forEach(p=>{ html += <tr> <td>${p.name}</td> <td>${p.praising}</td> <td>${p.prayer}</td> </tr>; }); html += "</table>"; document.getElementById("displayArea").innerHTML = html; } // ================= SPECIAL POINTS ================= function toggleSpecial(){ document.getElementById("specialContainer") .classList.toggle("hidden", document.getElementById("hasSpecial").value==="no"); } function addSpecial(){ const container = document.getElementById("specialPoints"); const count = container.children.length + 1; const textarea = document.createElement("textarea"); textarea.placeholder = "Special Point " + count; container.appendChild(textarea); } function saveSpecial(){ const textareas = document.querySelectorAll("#specialPoints textarea"); const points = []; textareas.forEach(t=>{ if(t.value.trim()!=="") points.push(t.value); }); localStorage.setItem("special", JSON.stringify(points)); alert("Special Points Saved"); displayData(); } // ================= DOWNLOAD ================= function downloadCSV(){ const prayers = JSON.parse(localStorage.getItem("prayers")); const special = JSON.parse(localStorage.getItem("special")) || []; let csv="SPECIAL PRAYER POINTS\n"; special.forEach((p,i)=> csv += (i+1)+". "+p+"\n"); csv += "\nPersonal Prayer Points\n"; csv += "Name,Praising,Prayer Points\n"; prayers.forEach(p=>{ csv += "${p.name}","${p.praising}","${p.prayer}"\n; }); const blob=new Blob([csv],{type:"text/csv"}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="prayer_data.csv"; link.click(); } </script> </body> </html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prayer Management System</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background: #f4f6f9;
+}
+
+header {
+  background: #1e3a8a;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+button {
+  background: #1e3a8a;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #162d6b;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background: #1e3a8a;
+  color: white;
+}
+
+.special-box {
+  background: #eef2ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.hidden { display: none; }
+
+.role-switch {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.role-switch button {
+  margin: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>Prayer Management System</header>
+
+<div class="container">
+
+<div class="role-switch">
+  <button onclick="showUser()">User</button>
+  <button onclick="showSecretary()">Secretary</button>
+</div>
+
+<!-- ================= USER SECTION ================= -->
+<div id="userSection" class="card">
+
+<h2>Submit Prayer Request</h2>
+
+<label>Name</label>
+<input type="text" id="name">
+
+<label>Month</label>
+<input type="month" id="month">
+
+<label>Praising Points</label>
+<textarea id="praising"></textarea>
+
+<label>Prayer Points</label>
+<textarea id="prayer"></textarea>
+
+<button onclick="submitPrayer()">Submit</button>
+
+<p id="successMsg" style="color:green;"></p>
+
+</div>
+
+
+<!-- ================= SECRETARY LOGIN ================= -->
+<div id="secretaryLogin" class="card hidden">
+<h2>Secretary Login</h2>
+<input type="password" id="secPass" placeholder="Enter Password">
+<button onclick="loginSecretary()">Login</button>
+</div>
+
+
+<!-- ================= SECRETARY DASHBOARD ================= -->
+<div id="secretaryDashboard" class="hidden">
+
+<div class="card">
+<h2>Special Prayer Points</h2>
+
+<select id="hasSpecial" onchange="toggleSpecial()">
+  <option value="no">No Special Points</option>
+  <option value="yes">Add Special Points</option>
+</select>
+
+<div id="specialContainer" class="hidden">
+  <div id="specialPoints"></div>
+  <button onclick="addSpecial()">Add Point</button>
+  <button onclick="saveSpecial()">Save Special Points</button>
+</div>
+</div>
+
+<div class="card">
+<h2>Monthly Data</h2>
+
+<select id="filterMonth" onchange="displayData()"></select>
+<button onclick="downloadCSV()">Download CSV</button>
+
+<div id="displayArea"></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+// ================= STORAGE INITIALIZE =================
+if(!localStorage.getItem("prayers")){
+  localStorage.setItem("prayers", JSON.stringify([]));
+}
+
+// ================= ROLE SWITCH =================
+function showUser(){
+  document.getElementById("userSection").classList.remove("hidden");
+  document.getElementById("secretaryLogin").classList.add("hidden");
+  document.getElementById("secretaryDashboard").classList.add("hidden");
+}
+
+function showSecretary(){
+  document.getElementById("userSection").classList.add("hidden");
+  document.getElementById("secretaryLogin").classList.remove("hidden");
+}
+
+// ================= USER SUBMIT =================
+function submitPrayer(){
+  const name = document.getElementById("name").value;
+  const month = document.getElementById("month").value;
+  const praising = document.getElementById("praising").value;
+  const prayer = document.getElementById("prayer").value;
+
+  if(!name || !month || !prayer){
+    alert("Please fill required fields.");
+    return;
+  }
+
+  const prayers = JSON.parse(localStorage.getItem("prayers"));
+  prayers.push({name, month, praising, prayer});
+  localStorage.setItem("prayers", JSON.stringify(prayers));
+
+  document.getElementById("successMsg").innerText = "Submitted Successfully!";
+  document.getElementById("name").value="";
+  document.getElementById("praising").value="";
+  document.getElementById("prayer").value="";
+}
+
+// ================= SECRETARY LOGIN =================
+function loginSecretary(){
+  if(document.getElementById("secPass").value === "admin123"){
+    document.getElementById("secretaryLogin").classList.add("hidden");
+    document.getElementById("secretaryDashboard").classList.remove("hidden");
+    populateMonths();
+    displayData();
+  } else {
+    alert("Incorrect password");
+  }
+}
+
+// ================= MONTH FILTER =================
+function populateMonths(){
+  const prayers = JSON.parse(localStorage.getItem("prayers"));
+  const months = [...new Set(prayers.map(p => p.month))];
+
+  const filter = document.getElementById("filterMonth");
+  filter.innerHTML = "<option value='all'>All Months</option>";
+  months.forEach(m=>{
+    filter.innerHTML += `<option value="${m}">${m}</option>`;
+  });
+}
+
+// ================= DISPLAY DATA =================
+function displayData(){
+  const prayers = JSON.parse(localStorage.getItem("prayers"));
+  const special = JSON.parse(localStorage.getItem("special")) || [];
+  const selectedMonth = document.getElementById("filterMonth").value;
+
+  let filtered = selectedMonth==="all" ?
+    prayers : prayers.filter(p=>p.month===selectedMonth);
+
+  let html = "";
+
+  if(special.length>0){
+    html += "<div class='special-box'><h3>Special Prayer Points</h3><ul>";
+    special.forEach(p=> html += `<li>${p}</li>`);
+    html += "</ul></div>";
+  }
+
+  html += "<h3>Personal Prayer Points</h3>";
+  html += "<table><tr><th>Name</th><th>Praising</th><th>Prayer Points</th></tr>";
+
+  filtered.forEach(p=>{
+    html += `<tr>
+      <td>${p.name}</td>
+      <td>${p.praising}</td>
+      <td>${p.prayer}</td>
+    </tr>`;
+  });
+
+  html += "</table>";
+
+  document.getElementById("displayArea").innerHTML = html;
+}
+
+// ================= SPECIAL POINTS =================
+function toggleSpecial(){
+  document.getElementById("specialContainer")
+    .classList.toggle("hidden",
+      document.getElementById("hasSpecial").value==="no");
+}
+
+function addSpecial(){
+  const container = document.getElementById("specialPoints");
+  const count = container.children.length + 1;
+  const textarea = document.createElement("textarea");
+  textarea.placeholder = "Special Point " + count;
+  container.appendChild(textarea);
+}
+
+function saveSpecial(){
+  const textareas = document.querySelectorAll("#specialPoints textarea");
+  const points = [];
+  textareas.forEach(t=>{
+    if(t.value.trim()!=="") points.push(t.value);
+  });
+  localStorage.setItem("special", JSON.stringify(points));
+  alert("Special Points Saved");
+  displayData();
+}
+
+// ================= DOWNLOAD =================
+function downloadCSV(){
+  const prayers = JSON.parse(localStorage.getItem("prayers"));
+  const special = JSON.parse(localStorage.getItem("special")) || [];
+
+  let csv="SPECIAL PRAYER POINTS\n";
+  special.forEach((p,i)=> csv += (i+1)+". "+p+"\n");
+
+  csv += "\nPersonal Prayer Points\n";
+  csv += "Name,Praising,Prayer Points\n";
+
+  prayers.forEach(p=>{
+    csv += `"${p.name}","${p.praising}","${p.prayer}"\n`;
+  });
+
+  const blob=new Blob([csv],{type:"text/csv"});
+  const link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="prayer_data.csv";
+  link.click();
+}
+
+</script>
+
+</body>
+</html>
